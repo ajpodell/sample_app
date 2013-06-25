@@ -116,5 +116,15 @@ end
         before { @user.password = @user.password_confirmation = "a" * 5 }
         it { should be_invalid } #could also use {should_not be_valid}
     end
+
+    describe "that emails are downcased before saving" do
+       let(:mixed_case_email) { "Foo@ExAmpLE.CoM"}
+        it "should be saved all lower-case" do
+            @user.email = mixed_case_email
+            @user.save
+            @user.reload.email.should == mixed_case_email.downcase
+        end
+    end
+
 end 
 
