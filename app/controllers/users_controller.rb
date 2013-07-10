@@ -23,7 +23,11 @@ class UsersController < ApplicationController
     end
 
     def index
-        @users = User.all
+        #without pagination
+        #@users = User.all
+
+        #with pagination
+        @users = User.paginate(page: params[:page])
     end
 
     def edit
