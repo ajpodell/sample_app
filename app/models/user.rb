@@ -13,6 +13,17 @@ class User < ActiveRecord::Base
   attr_accessible :name, :email, :password, :password_confirmation
   has_secure_password
   has_many :microposts, dependent: :destroy
+  has_many :relationships, foreign_key: "follower_id", dependent: :destroy
+  #followed users are the "followeds" in the relationship table, 
+  #which have "this" user as the follower
+  has_many :followed_users, through: :relationships, source: :followed
+
+  has_many :reverse_relationships, foreign_key: "followed_id", 
+                                   class_name: "Relationship",
+                                   dependent: :destroy
+                                   
+  #the source will be follower by default, since its the proper singular of followers                                   
+  has_many :followers, through: :reverse_relationships#, source: :follower                                  
 
   #before_save { |user| user.email = email.downcase } --old method
   before_save { email.downcase! }
@@ -30,7 +41,21 @@ class User < ActiveRecord::Base
     Micropost.where("user_id = ?", id)
   end
 
-  private
+  def following?(other_user) 
+    relationships.find_by_followed_id(other_user.id)
+  end
+
+  def follow!(other_user)
+    # "self." is optional - similar to 'this' in c++
+    #  self.relationships.create!(followed_id:other_user.id)
+    relationships.create!(followed_id:other_user.id)
+  end
+
+  def unfollow!(other_user)
+    relationships.find_by_followed_id(other_user.id).destroy
+  end
+    
+   private
     def create_remember_token
       self.remember_token = SecureRandom.urlsafe_base64
     end
